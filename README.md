@@ -4,8 +4,9 @@
 - **Requires System.IO.Ports NuGet Package**
 - Install via .NET CLI using the command
 - ```
-      dotnet add package System.IO.Ports
+  dotnet add package System.IO.Ports
   ```
+- Or can be installed using the NuGet Package Manager in visual studio
 ## Basic C# Usage:
 ```csharp
 using Mouse;
