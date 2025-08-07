@@ -7,6 +7,8 @@
   dotnet add package System.IO.Ports
   ```
 - Can also be installed using the NuGet Package Manager in visual studio
+
+- This was made with the intention for 2 PC Setup only, This is for educational purposes only and i am not responsible for any bans that you may encounter
 ## Basic C# Usage:
 ```csharp
 using Mouse;
