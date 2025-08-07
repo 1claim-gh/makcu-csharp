@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Ports;
+using System.Linq;
+using System.Text;
 using System.Threading;
-using System.Diagnostics;
+using System.Threading.Tasks;
+using Utilities;
 
 
 namespace Mouse
 {
-    enum MouseButton : int
+    public enum MouseButton : int
     {
         Left = 1,
         Right = 2,
@@ -23,9 +24,9 @@ namespace Mouse
     {
         private static byte[] change_cmd = { 0xDE, 0xAD, 0x05, 0x00, 0xA5, 0x00, 0x09, 0x3D, 0x00 };
         public static bool connected = false;
-        private static SerialPort port;
+        private static SerialPort port = null;
         private static Thread button_inputs;
-        private static string version = "";
+        public static string version = "";
         private static bool runReader = false;
         public static Dictionary<int, bool> bState { get; private set; }
         private static HashSet<byte> validBytes = new HashSet<byte>
@@ -38,7 +39,8 @@ namespace Mouse
         private static Random r = new Random();
         public static void connect(string com)
         {
-            port = new SerialPort(com, 115200, Parity.None, 8, StopBits.One);
+            if(port == null)
+                port = new SerialPort(com, 115200, Parity.None, 8, StopBits.One);
             try
             {
                 port.Open();
@@ -49,22 +51,18 @@ namespace Mouse
                 port.Write(change_cmd, 0, change_cmd.Length);
                 port.BaseStream.Flush();
                 port.BaudRate = 4000000;
-                port.Write("km.version()\r");
-                Thread.Sleep(500);
-                version = port.ReadLine();
+                GetVersion();
                 Thread.Sleep(150);
                 Console.WriteLine($"[+] Device connected to {port.PortName} at {port.BaudRate} baudrate");
                 port.Write("km.buttons(1)\r\n");
                 port.Write("km.echo(0)\r\n");
                 port.DiscardInBuffer();
                 start_listening();
-
+                
                 bState = new Dictionary<int, bool>();
                 for (int i = 1; i <= 5; i++)
                     bState[i] = false;
                 connected = true;
-
-               
             }
             catch (Exception ex)
             {
@@ -87,10 +85,21 @@ namespace Mouse
             if (!port.IsOpen)
                 Console.WriteLine("[!] Port terminated successfully");
         }
+
+        public static async void reconnect_device(string com)
+        {
+            disconnect();
+            await Task.Delay(200);
+            if(!port.IsOpen)
+                port.Open();
+            Console.WriteLine("[+] Reconnected to device.");
+        }
         
         public static void GetVersion()
         {
-            Console.WriteLine($"[!] Device version: {version}");
+            port.Write("km.version()\r");
+            Thread.Sleep(100);
+            version = port.ReadLine();
         }
 
         public static void move(int x, int y)
@@ -129,18 +138,38 @@ namespace Mouse
             port.BaseStream.FlushAsync();
         }
 
-        public static void click(string button)
+        public static void lock_axis(string axis, int bit)
+        {
+            if (!connected)
+                return;
+
+            port.Write($"km.lock_m{axis}({bit})\r");
+            port.BaseStream.FlushAsync();
+        }
+
+        public static void click(string button, int ms_delay, int click_delay = 0)
         {
             if (!connected)
                 return;
 
             int time = r.Next(10, 100);
+            Thread.Sleep(click_delay);
             port.Write($"km.{button}(1)\r");
-            Thread.Sleep(time);
+            Thread.Sleep(1);
             port.Write($"km.{button}(0)\r");
             port.BaseStream.FlushAsync();
+            Thread.Sleep(ms_delay);
         }
 
+        public static void press(MouseButton button, int press)
+        {
+            if(!connected)
+                return;
+
+            string cmd = $"km.{MouseButtonToString(button)}({press})\r";
+            port.Write(cmd);
+            port.BaseStream.FlushAsync();
+        }
         public static void start_listening()
         {
             Thread.Sleep(500); //Allow time for cleanup
@@ -154,8 +183,8 @@ namespace Mouse
         {
             await Task.Run(() =>
             {
-                Console.WriteLine("[+} Listening to device.");
-                while (true)
+                Console.WriteLine("[+] Listening to device.");
+                while (runReader)
                 {
                     if (!connected)
                     {
@@ -174,7 +203,7 @@ namespace Mouse
                             byte b = (byte)data;
 
                             for (int i = 1; i < 6; i++)
-                                bState[i] = (b & (1 << (i - 1))) != 0;
+                                bState[i] = (b & 1 << i - 1) != 0;
 
                             port.DiscardInBuffer();
                         }
@@ -235,12 +264,30 @@ namespace Mouse
             return (MouseButton)button;
         }
 
+        public static string MouseButtonToString(MouseButton button)
+        {
+            switch (button)
+            {
+                case MouseButton.Left:
+                    return "left";
+                case MouseButton.Right:
+                    return "right";
+                case MouseButton.Middle:
+                    return "middle";
+                case MouseButton.mouse4:
+                    return "ms1";
+                case MouseButton.mouse5:
+                    return "ms2";
+            }
+            return "left";
+        }
+
         public static void setMouseSerial(string serial)
         {
             if (!connected)
                 return;
 
-            port.Write($"km.serial{serial}");
+            port.Write($"km.serial({serial})\r");
         }
 
         public static void resetMouseSerial()
@@ -248,7 +295,19 @@ namespace Mouse
             if (!connected)
                 return;
 
-            port.Write("km.serial(0)");
+            port.Write("km.serial(0)\r");
+        }
+
+        public static void unlock_all_buttons()
+        {
+            if(port.IsOpen)
+            {
+                port.Write($"km.lock_ml(0)\r");
+                port.Write($"km.lock_mr(0)\r");
+                port.Write($"km.lock_mm(0)\r");
+                port.Write($"km.lock_ms1(0)\r");
+                port.Write($"km.lock_ms2(0)\r");
+            }
         }
     }
 }
