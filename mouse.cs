@@ -152,10 +152,10 @@ namespace Mouse
             if (!connected)
                 return;
 
-            int time = r.Next(10, 100);
+            int time = r.Next(10, 100); //use this to randomize press time
             Thread.Sleep(click_delay);
             port.Write($"km.{button}(1)\r");
-            Thread.Sleep(1);
+            Thread.Sleep(time);
             port.Write($"km.{button}(0)\r");
             port.BaseStream.FlushAsync();
             Thread.Sleep(ms_delay);
@@ -311,4 +311,5 @@ namespace Mouse
         }
     }
 }
+
 
