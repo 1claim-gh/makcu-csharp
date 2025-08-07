@@ -4,6 +4,7 @@
 - This was made with the intention for 2 PC Setup only
 - This is for educational purposes only and i am not responsible for any bans, penalties or other concequences that you may encounter
 
+## Prerequisites
 - **Requires System.IO.Ports NuGet Package**
 - Install via .NET CLI using the command
 - ```
