@@ -3,7 +3,7 @@
 ## DISCLAIMER
 - This was made with the intention for 2 PC Setup only
 - This is for educational purposes only and i am not responsible for any bans, penalties or other consequences that you may encounter
-- This library does not contain every supported command by Makcu, I only included the commands I most commonly use
+- This library does not contain every supported command by Makcu, I only included the commands that are more commonly used
 
 ## Prerequisites
 - **Requires System.IO.Ports NuGet Package**
