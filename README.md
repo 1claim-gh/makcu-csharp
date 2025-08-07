@@ -20,5 +20,4 @@ device.click(MouseButton.Left, 1);
 - Mouse Movement (100 rapid moves tested): Total elapsed time: 46ms, (0.46 ms avg)
 - Mouse Clicks (50 rapid clicks): Total elapsed time: 155ms, (1.55 ms avg)
 - NOTE: Mouse clicks had a 1ms delay added between each command sent to ensure the command is sent
-
- On Average performs 10x Faster than most recent Python release 
+**On Average performs 10x Faster than most recent Python release (version 2.1.2 as of publish date)**
