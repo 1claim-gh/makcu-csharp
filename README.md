@@ -31,5 +31,5 @@ device.click(MouseButton.Left, 1);
 ## Acknowledgements
 
 - [Makcu Discord Server](https://discord.gg/frvh3P4Qeg) community
-- [Makcu C++ Library](https://github.com/K4HVH/makcu-cpp) by [K4HVH](https://github.com/K4HVH) (I had references previous versions of his C++ library when writing mine)
+- [Makcu C++ Library](https://github.com/K4HVH/makcu-cpp) by [K4HVH](https://github.com/K4HVH) (I had occasionally referenced previous versions of his C++ library when writing mine)
 - [Makcu Python Library](https://github.com/SleepyTotem/makcu-py-lib) by [SleepyTotem](https://github.com/SleepyTotem)
