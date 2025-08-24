@@ -177,19 +177,18 @@ namespace Mouse
 
         private static void read_buttons(object sender, SerialDataReceivedEventArgs e)
         {
-            if (port.BytesToRead > 0)
+            while (port.BytesToRead > 0)
             {
                 int data = port.ReadByte();
                 if (!validBytes.Contains((byte)data))
-                    return;
+                    continue;
 
                 byte b = (byte)data;
 
                 for (int i = 1; i < 6; i++)
                     bState[i] = (b & 1 << i - 1) != 0;
-
-                port.DiscardInBuffer();
             }
+            port.DiscardInBuffer();
         }
 
         public static bool button_pressed(MouseButton button)
@@ -286,6 +285,7 @@ namespace Mouse
         }
     }
 }
+
 
 
 
