@@ -27,7 +27,6 @@ namespace Mouse
         private static SerialPort port = null;
         private static Thread button_inputs;
         public static string version = "";
-        private static bool runReader = false;
         public static Dictionary<int, bool> bState { get; private set; }
         private static HashSet<byte> validBytes = new HashSet<byte>
         {
@@ -77,7 +76,7 @@ namespace Mouse
                 return;
 
             Console.WriteLine("[!] Closing port...");
-            runReader = false;
+            port.DataReceived -= read_buttons; //Disconnect event
             port.Write("km.buttons(0)\r\n");
             Thread.Sleep(10);//Allow time for command to be sent
             port.BaseStream.Flush();
@@ -173,48 +172,24 @@ namespace Mouse
         public static void start_listening()
         {
             Thread.Sleep(500); //Allow time for cleanup
-            runReader = true;
-            button_inputs = new Thread(read_buttons);
-            button_inputs.IsBackground = true;
-            button_inputs.Start();
+            port.DataReceived += read_buttons;
         }
 
-        public static async void read_buttons()
+        private static void read_buttons(object sender, SerialDataReceivedEventArgs e)
         {
-            await Task.Run(() =>
+            if (port.BytesToRead > 0)
             {
-                Console.WriteLine("[+] Listening to device.");
-                while (runReader)
-                {
-                    if (!connected)
-                    {
-                        Thread.Sleep(1000);
-                        connected = port.IsOpen;
-                        continue;
-                    }
-                    try
-                    {
-                        if (port.BytesToRead > 0)
-                        {
-                            int data = port.ReadByte();
-                            if (!validBytes.Contains((byte)data))
-                                continue;
+                int data = port.ReadByte();
+                if (!validBytes.Contains((byte)data))
+                    return;
 
-                            byte b = (byte)data;
+                byte b = (byte)data;
 
-                            for (int i = 1; i < 6; i++)
-                                bState[i] = (b & 1 << i - 1) != 0;
+                for (int i = 1; i < 6; i++)
+                    bState[i] = (b & 1 << i - 1) != 0;
 
-                            port.DiscardInBuffer();
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        connected = false;
-                    }
-                }
-                
-            });
+                port.DiscardInBuffer();
+            }
         }
 
         public static bool button_pressed(MouseButton button)
@@ -311,5 +286,6 @@ namespace Mouse
         }
     }
 }
+
 
 
